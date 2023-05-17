@@ -1,9 +1,11 @@
-FROM containerstack/alpine-arm64:3.7.0
+FROM alpine:3.18.0
 
 LABEL org.opencontainers.image.source=https://github.com/vicchi/docker-lookbusy
+LABEL org.opencontainers.image.url=https://github.com/vicchi/docker-lookbusy/tree/master#readme
 LABEL org.opencontainers.image.authors="Gary Gale <gary@vicchi.org>"
 LABEL org.opencontainers.image.version=1.4.0
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
+LABEL org.opencontainers.image.description="Lighweight multi-architecture Docker image for lookbusy"
 
 ENV PACKAGES make gcc musl-dev
 

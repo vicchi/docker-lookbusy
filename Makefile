@@ -19,15 +19,16 @@ $(foreach var,$(ENVVARS),$(eval $(shell echo export $(var)="$($(var))")))
 
 .DEFAULT_GOAL := help
 
-OS := linux
-ARCH := $(shell uname -i)
 VERSION := $(shell cat ./VERSION)
 COMMIT_HASH := $(shell git log -1 --pretty=format:"sha-%h")
+PLATFORMS := "linux/arm/v7,linux/arm64/v8,linux/amd64"
 
 BUILD_FLAGS ?= 
 
 LOOKBUSY := lookbusy
-LOOKBUSY_REPO := ${GITHUB_REGISTRY}/woeplanet
+LOOKBUSY_BUILDER := $(LOOKBUSY)-builder
+LOOKBUSY_USER := vicchi
+LOOKBUSY_REPO := ${GITHUB_REGISTRY}/${LOOKBUSY_USER}
 LOOKBUSY_IMAGE := ${LOOKBUSY}
 LOOKBUSY_DOCKERFILE := ./docker/${LOOKBUSY}/Dockerfile
 
@@ -58,33 +59,18 @@ REBUILD_TARGETS := rebuild_lookbusy
 .PHONY: rebuild
 rebuild: $(REBUILD_TARGETS) ## Rebuild all images (no cache)
 
-RELEASE_TARGETS := release_lookbusy
+# lookbusy targets
 
-.PHONY: release
-release: $(RELEASE_TARGETS)	## Tag and push all images
-
-# spelunker-service targets
-
-build_lookbusy:	## Build the lookbusy image
+build_lookbusy:	repo_login	## Build the lookbusy image
 	$(MAKE) _build_image \
 		-e BUILD_DOCKERFILE=./docker/$(LOOKBUSY)/Dockerfile \
 		-e BUILD_IMAGE=$(LOOKBUSY_IMAGE)
-	$(MAKE) _tag_image \
-		-e BUILD_IMAGE=$(LOOKBUSY_IMAGE) \
-		-e BUILD_TAG=latest
 
 rebuild_lookbusy:	## Rebuild the lookbusy image (no cache)
 	$(MAKE) _build_image \
 		-e BUILD_DOCKERFILE=./docker/$(LOOKBUSY)/Dockerfile \
 		-e BUILD_IMAGE=$(LOOKBUSY_IMAGE) \
 		-e BUILD_FLAGS="--no-cache"
-	$(MAKE) _tag_image \
-		-e BUILD_IMAGE=$(LOOKBUSY_IMAGE) \
-		-e BUILD_TAG=latest
-
-release_lookbusy: build_lookbusy repo_login	## Tag and push lookbusy image
-	$(MAKE) _release_image \
-		-e BUILD_IMAGE=$(LOOKBUSY_IMAGE)
 
 .PHONY: _lint_dockerfile
 _lint_dockerfile:
@@ -92,37 +78,15 @@ _lint_dockerfile:
 
 .PHONY: _build_image
 _build_image:
-	DOCKER_BUILDKIT=1 docker build --platform="$(OS)/$(ARCH)" --file ${BUILD_DOCKERFILE} --tag ${BUILD_IMAGE} --ssh default $(BUILD_FLAGS) .
-
-.PHONY: _release_image
-_release_image:
-	$(MAKE) _tag_image \
-		-e BUILD_IMAGE=$(BUILD_IMAGE) \
-		-e BUILD_TAG=$(VERSION)
-	$(MAKE) _tag_image \
-		-e BUILD_IMAGE=$(BUILD_IMAGE) \
-		-e BUILD_TAG=$(COMMIT_HASH)
-	$(MAKE) _registry_tag_image \
-		-e BUILD_IMAGE=$(BUILD_IMAGE) \
-		-e BUILD_TAG=latest
-	$(MAKE) _registry_tag_image \
-		-e BUILD_IMAGE=$(BUILD_IMAGE) \
-		-e BUILD_TAG=$(VERSION)
-	$(MAKE) _registry_tag_image \
-		-e BUILD_IMAGE=$(BUILD_IMAGE) \
-		-e BUILD_TAG=$(COMMIT_HASH)
-
-	docker push ${LOOKBUSY_REPO}/$(BUILD_IMAGE):latest
-	docker push ${LOOKBUSY_REPO}/$(BUILD_IMAGE):$(VERSION)
-	docker push ${LOOKBUSY_REPO}/$(BUILD_IMAGE):$(COMMIT_HASH)
-
-.PHONY: _tag_image
-_tag_image:
-	docker tag ${BUILD_IMAGE} ${BUILD_IMAGE}:${BUILD_TAG}
-
-.PHONY: _registry_tag_image
-_registry_tag_image:
-	docker tag ${BUILD_IMAGE} ${LOOKBUSY_REPO}/${BUILD_IMAGE}:${BUILD_TAG}
+	docker buildx inspect $(LOOKBUSY_BUILDER) > /dev/null 2>&1 || \
+		docker buildx create --name $(LOOKBUSY_BUILDER) --bootstrap --use
+	docker buildx build --platform=$(PLATFORMS) \
+		--file ${BUILD_DOCKERFILE} --push \
+		--tag ${LOOKBUSY_REPO}/${BUILD_IMAGE}:latest \
+		--tag ${LOOKBUSY_REPO}/${BUILD_IMAGE}:$(VERSION) \
+		--tag ${LOOKBUSY_REPO}/${BUILD_IMAGE}:$(COMMIT_HASH) \
+		$(BUILD_FLAGS) \
+		--ssh default $(BUILD_FLAGS) .
 
 .PHONY: repo_login
 repo_login:
