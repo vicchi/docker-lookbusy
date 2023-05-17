@@ -1,6 +1,12 @@
 # docker-lookbusy
-Lighweight docker image for lookbusy
 
+A lightweight multi-architecture Docker image for [lookbusy](http://www.devin.com/lookbusy/).
+
+The following platform architectures are currently available:
+
+* `linux/arm/v7`
+* `linux/arm64/v8`
+* `linux/amd64`
 
 ## lookbusy
 
@@ -8,20 +14,27 @@ Lookbusy is a simple application for generating synthetic load on a Linux system
 
 ![lookbusy](http://www.devin.com/lookbusy/logo.png)
 
-Project's website is [here](http://www.devin.com/lookbusy/)
+The source project's website is [here](http://www.devin.com/lookbusy/).
 
 ## Build
 
-```
-$ docker build -t lookbusy .
-```
-
-## Run
-
-Display usages :
+Copy `.env.sample` to `.env` and edit, adding your GitHub username and Personal Access Token; this
+repo assumes pushing to the GitHub Container Registry at `ghcr.io`.
 
 ```
-$ docker run --rm lookbusy
+$ make build
+```
+
+## Starting Lookbusy with Docker
+
+```
+docker run ghcr.io/vicchi/lookbusy:1.4.0 --cpu-mode=curve --cpu-util=10-15
+```
+
+To display all `lookbusy` command line options: 
+
+```
+$ docker run --rm ghcr.io/vicchi/lookbusy:1.4.0
 usage: lookbusy [ -h ] [ options ]
 General options:
   -h, --help           Commandline help (you're reading it)
@@ -55,11 +68,23 @@ Disk usage options:
                          /tmp); specify multiple times for additional paths
 ```
 
+## Starting Lookbusy with Docker Compose
 
-## Docker hub
+Add the following lines to an existing or new `docker-compose.yml` ...
 
-[Repository](https://hub.docker.com/r/lorel/docker-lookbusy/)
+```
+  lookbusy:
+    image: ghcr.io/vicchi/lookbusy:1.4.0
+    restart: unless-stopped
+    command:
+      - --cpu-mode=curve
+      - --cpu-util=10-15
+```
 
-## License
+## Packages
 
-[GPU](https://opensource.org/licenses/GPL-1.0)
+[GitHub Container Repository](https://github.com/vicchi/docker-lookbusy/pkgs/container/lookbusy)
+
+## Licenses
+
+Lookbusy is licensed under the [GPL](https://opensource.org/licenses/GPL-1.0); this repository is licensed as [BSD-3-Clause](./LICENSE).
