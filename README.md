@@ -34,7 +34,7 @@ docker run ghcr.io/vicchi/lookbusy:latest --cpu-mode=curve --cpu-util=10-15
 To display all `lookbusy` command line options: 
 
 ```
-$ docker run --rm ghcr.io/vicchi/lookbusy:1.4.0
+$ docker run --rm ghcr.io/vicchi/lookbusy:latest
 usage: lookbusy [ -h ] [ options ]
 General options:
   -h, --help           Commandline help (you're reading it)
