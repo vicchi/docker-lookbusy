@@ -1,26 +1,42 @@
-FROM alpine:3.18.0
+ARG UBUNTU_VERSION=24.04
+ARG VERSION
+FROM ubuntu:${UBUNTU_VERSION} AS build
+
+RUN <<EOT
+apt-get update -qy
+apt-get install -qyy \
+    -o APT::Install-Recommends=false \
+    -o APT::Install-Suggests=false \
+    build-essential
+apt-get clean
+rm -rf /var/lib/apt/lists/*
+EOT
+
+WORKDIR /build
+COPY src /build/src
+
+WORKDIR /build/src
+RUN <<EOT
+./configure
+make
+EOT
+
+FROM ubuntu:${UBUNTU_VERSION}
+ARG UBUNTU_VERSION
+ARG VERSION
+WORKDIR /service
+
+COPY --from=build /build/src/lookbusy ./lookbusy
 
 LABEL org.opencontainers.image.source=https://github.com/vicchi/docker-lookbusy
 LABEL org.opencontainers.image.url=https://github.com/vicchi/docker-lookbusy/tree/master#readme
-LABEL org.opencontainers.image.authors="Gary Gale <gary@vicchi.org>"
-LABEL org.opencontainers.image.version=1.4.0
-LABEL org.opencontainers.image.licenses=BSD-3-Clause
-LABEL org.opencontainers.image.description="Lighweight multi-architecture Docker image for lookbusy"
+LABEL org.opencontainers.image.authors="Gary Gale <gary@vicchi.org>, Devin Carraway <lookbusy@devin.com>"
+LABEL org.opencontainers.image.version=${VERSION}
+LABEL org.opencontainers.image.revision=${VERSION}
+LABEL org.opencontainers.image.licenses=GPL-2.0-or-later
+LABEL org.opencontainers.image.description="Lightweight multi-architecture Docker image for lookbusy"
+LABEL org.opencontainers.image.title="Docker Lookbusy"
+LABEL org.opencontainers.image.base.name=docker.io/ubuntu:${UBUNTU_VERSION}
 
-ENV PACKAGES make gcc musl-dev
-
-WORKDIR /service
-RUN apk add --no-cache $PACKAGES && \
-  wget -q http://www.devin.com/lookbusy/download/lookbusy-1.4.tar.gz && \
-  tar -xzf lookbusy-1.4.tar.gz && \
-  cd lookbusy-1.4/ && \
-  ./configure && \
-  make install && \
-  rm -rfv lookbusy-1.4* && \
-  apk del $PACKAGES && \
-  rm -rfv /var/cache/apk/*
-
-WORKDIR /
-ENTRYPOINT ["/usr/local/bin/lookbusy"]
-
+ENTRYPOINT ["/service/lookbusy"]
 CMD ["--help"]
