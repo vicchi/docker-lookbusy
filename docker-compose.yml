@@ -1,0 +1,9 @@
+name: docker-lookbusy
+
+services:
+  lookbusy:
+    image: ghcr.io/vicchi/lookbusy:latest
+    restart: unless-stopped
+    command:
+      - --cpu-mode=curve
+      - --cpu-util=15-20

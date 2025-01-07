@@ -18,7 +18,7 @@ The source project's website is [here](http://www.devin.com/lookbusy/).
 
 ## Build
 
-Copy `.env.sample` to `.env` and edit, adding your GitHub username and Personal Access Token; this
+Copy `.env.template` to `.env` and edit, adding your GitHub username and Personal Access Token; this
 repo assumes pushing to the GitHub Container Registry at `ghcr.io`.
 
 ```
@@ -28,7 +28,7 @@ $ make build
 ## Starting Lookbusy with Docker
 
 ```
-docker run ghcr.io/vicchi/lookbusy:1.4.0 --cpu-mode=curve --cpu-util=10-15
+docker run ghcr.io/vicchi/lookbusy:latest --cpu-mode=curve --cpu-util=10-15
 ```
 
 To display all `lookbusy` command line options: 
@@ -74,7 +74,7 @@ Add the following lines to an existing or new `docker-compose.yml` ...
 
 ```
   lookbusy:
-    image: ghcr.io/vicchi/lookbusy:1.4.0
+    image: ghcr.io/vicchi/lookbusy:latest
     restart: unless-stopped
     command:
       - --cpu-mode=curve
@@ -87,4 +87,4 @@ Add the following lines to an existing or new `docker-compose.yml` ...
 
 ## Licenses
 
-Lookbusy is licensed under the [GPL](https://opensource.org/licenses/GPL-1.0); this repository is licensed as [BSD-3-Clause](./LICENSE).
+Lookbusy is licensed under the [GPL](https://opensource.org/licenses/GPL-2.0); this repository is licensed as [BSD-3-Clause](./LICENSE).
